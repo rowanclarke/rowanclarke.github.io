@@ -1,2 +1,13 @@
 title = "Rowan Clarke"
 theme = "holy"
+[menu]
+[[menu.main]]
+  identifier = "about"
+  name = "About"
+  url = "/about/"
+  weight = 10
+
+[taxonomies]
+category = "categories"
+tag = "tags"
+series = "series"
