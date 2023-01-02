@@ -1,0 +1,21 @@
+{{ define "main" }}
+<div>
+    <article class="box:border-box pt:64 w:full">
+        <header class="mb:32">
+            <div class="font:45 font:extrabold">{{ .Title }}</div>
+        </header>
+    </article>
+    <ul>
+        {{- range site.Taxonomies.series }}
+        <li>
+            <div class="mb:16 py:24">
+                <a class="f:24 font:semibold f:fade-30! f:fade-10!:hover transition:150ms;ease-in" href="{{ .Page.Permalink }}">
+                    <div>{{ .Page.Title }}</div>
+                </a>
+                <div class="mt:12 f:fade-70">{{ .Count }} posts</div>
+            </div>
+        </li>
+        {{- end }}
+    </ul>
+</div>
+{{ end }}

@@ -2,6 +2,11 @@ title = "Rowan Clarke"
 theme = "holy"
 [menu]
 [[menu.main]]
+  identifier = "series"
+  name = "Series"
+  url = "/series/"
+  weight = 8
+[[menu.main]]
   identifier = "about"
   name = "About"
   url = "/about/"
