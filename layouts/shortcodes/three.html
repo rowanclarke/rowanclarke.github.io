@@ -1,0 +1,13 @@
+{{ $id := md5 now }}
+<script id="{{ $id }}">
+    WIDTH = 500;
+    HEIGHT = 500;
+    canvas = document.createElement("div");
+    canvas.clientWidth = WIDTH;
+    canvas.clientHeight = HEIGHT;
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(WIDTH, HEIGHT);
+    canvas.appendChild(renderer.domElement);
+    document.getElementById("{{ $id }}").parentElement.appendChild(canvas);
+</script>
+{{ .Inner }}
