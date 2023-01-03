@@ -1,2 +1,4 @@
-<script src="https://unpkg.com/three"></script>
-<script src='{{ ( resources.Get "js/three.js" | js.Build ).RelPermalink }}'></script>
+<script src="https://unpkg.com/three@0.147.0/build/three.js"></script>
+<script src="https://unpkg.com/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/three@0.147.0/examples/js/controls/DragControls.js"></script>
+<script src='{{ (resources.Get "js/three.js" | js.Build).RelPermalink }}'></script>
