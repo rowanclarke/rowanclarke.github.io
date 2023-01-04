@@ -6,8 +6,9 @@ series_weight: 1
 ---
 
 {{<script>}}
-    console.log("Hello");
-    element = new Canvas(500, 500, (canvas) => {
-        console.log("Hello");
-    }).canvas;
+    let canvas = new Canvas(300, 300, (canvas) => {
+        let arrow = new Arrow([0, 0, 0], [5, 5, 5], 0xffff00, true);
+        canvas.add(arrow);
+    });
+    return canvas.canvas;
 {{</script>}}
