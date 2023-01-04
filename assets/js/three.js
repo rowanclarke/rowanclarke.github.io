@@ -37,6 +37,8 @@ window.Grid = class {
             event.object.material.emissive.set(0x000000);
         });
 
+        this.grid = new THREE.GridHelper(10, 10, COLORS.gray, COLORS.dark_gray);
+
         this.animate = () => {
             requestAnimationFrame(this.animate);
             this.orbit.update();
@@ -45,7 +47,7 @@ window.Grid = class {
         
         createScene(this);
 
-        this.scene.add(this.light);
+        this.scene.add(this.light, this.grid);
         this.animate();
     }
 
