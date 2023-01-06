@@ -1,6 +1,10 @@
-let pt = 0.1;
+import * as THREE from "https://unpkg.com/three/build/three.module.js"
+import { DragControls } from "https://unpkg.com/three/examples/jsm/controls/DragControls.js"; 
+import { OrbitControls } from "https://unpkg.com/three/examples/jsm/controls/OrbitControls.js";
 
-window.Grid = class {
+const PT = 0.1;
+
+export class Grid {
     constructor(width, height, createScene) {
         this.canvas = document.createElement("div");
         this.canvas.style.width = width;
@@ -15,10 +19,10 @@ window.Grid = class {
 
         this.light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
 
-        this.orbit = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
         
         this.draggables = [];
-        this.drag = new THREE.DragControls(this.draggables, this.camera, this.renderer.domElement);
+        this.drag = new DragControls(this.draggables, this.camera, this.renderer.domElement);
         this.drag.addEventListener('drag', (event) => {
             event.object.drag();
         });
@@ -59,14 +63,14 @@ window.Grid = class {
     }
 }
 
-window.Arrow = class extends THREE.Group {
+export class Arrow extends THREE.Group {
     constructor(v0, v1, color, draggable) {
         super();
         this.v0 = new THREE.Vector3().fromArray(v0);
         this.v1 = new THREE.Vector3().fromArray(v1);
         this.color = color;
         this.head = new THREE.Mesh(
-            new THREE.ConeGeometry(2 * pt, 4 * pt, 16),
+            new THREE.ConeGeometry(2 * PT, 4 * PT, 16),
             new THREE.MeshLambertMaterial({ color })
         );
         this.tail = new THREE.Mesh(
@@ -87,7 +91,7 @@ window.Arrow = class extends THREE.Group {
     getTube() {
         return new THREE.TubeGeometry(
             new THREE.LineCurve(this.v0, this.v1),
-            1, 1 * pt, 8
+            1, 1 * PT, 8
         );
     }
 
@@ -99,7 +103,7 @@ window.Arrow = class extends THREE.Group {
     }
 }
 
-window.COLORS = {
+export const COLORS = {
     red: [0xF7A1A3,
         0xFF8080,
         0xFC6255,
