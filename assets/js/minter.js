@@ -1,28 +1,44 @@
 import * as THREE from "https://unpkg.com/three/build/three.module.js"
 import { DragControls } from "https://unpkg.com/three/examples/jsm/controls/DragControls.js"; 
 import { OrbitControls } from "https://unpkg.com/three/examples/jsm/controls/OrbitControls.js";
+import { GUI } from 'https://unpkg.com/three/examples/jsm/libs/lil-gui.module.min.js'
 
 const PT = 0.1;
 
-export class Grid {
-    constructor(width, height, createScene) {
+export class Canvas {
+    constructor(width, height) {
         this.canvas = document.createElement("div");
-        this.canvas.style.width = width;
-        this.canvas.style.height = height;
+        this.canvas.style.width = width + "px";
+        this.canvas.style.height = height + "px";
+        this.canvas.style.position = "relative";
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(width, height);
         this.canvas.appendChild(this.renderer.domElement);
-        
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+        this.gui = new GUI( { container: this.canvas } );
+        this.gui.domElement.style.top = 0;
+        this.gui.domElement.style.right = 0;
+        this.gui.domElement.style.position = "absolute";
+        this.width = width;
+        this.height = height;
+        this.scene = null;
+        this.run = () => {
+            if (this.scene) {
+                requestAnimationFrame(this.run);
+                this.renderer.render(this.scene, this.scene.update());
+            }
+        }
+    }
+}
+
+class Scene extends THREE.Scene {
+    constructor(canvas) {
+        super();
+        this.camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
         this.camera.position.z = 5;
-
         this.light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
-
-        this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
-        
+        this.orbit = new OrbitControls(this.camera, canvas.renderer.domElement);
         this.draggables = [];
-        this.drag = new DragControls(this.draggables, this.camera, this.renderer.domElement);
+        this.drag = new DragControls(this.draggables, this.camera, canvas.renderer.domElement);
         this.drag.addEventListener('drag', (event) => {
             event.object.drag();
         });
@@ -40,66 +56,84 @@ export class Grid {
         this.drag.addEventListener('hoveroff', (event) => {
             event.object.material.emissive.set(0x000000);
         });
+        this.add(this.light);
+        canvas.scene = this;
+    }
 
-        this.grid = new THREE.GridHelper(10, 10, COLORS.gray, COLORS.dark_gray);
-
-        this.animate = () => {
-            requestAnimationFrame(this.animate);
-            this.orbit.update();
-            this.renderer.render(this.scene, this.camera);
-        }
-        
-        createScene(this);
-
-        this.scene.add(this.light, this.grid);
-        this.animate();
+    addDraggables(...objects) {
+        objects.forEach(object => {
+            if (object.drag) this.draggables.push(object);
+            if (object.children) this.addDraggables(...object.children);
+        });
     }
 
     add(...objects) {
-        objects.forEach(object => {
-            this.scene.add(object);
-            if (object.draggables) this.draggables.push(...object.draggables);    
-        });
+        this.addDraggables(...objects);
+        super.add(...objects);
+    }
+
+    update() {
+        this.orbit.update();
+        return this.camera;
     }
 }
 
+export class Grid extends Scene {
+    constructor(dom) {
+        super(dom);
+        this.grid = new THREE.GridHelper(10, 10, COLORS.gray, COLORS.dark_gray);
+        this.add(this.grid);
+    }
+}
+
+const GEOMETRY = {
+    cone: () => new THREE.ConeGeometry(2 * PT, 4 * PT, 16),
+    tube: (v1, v2) => new THREE.TubeGeometry(
+        new THREE.LineCurve(v1, v2),
+        1, 1 * PT, 8
+    ),
+}
+
 export class Arrow extends THREE.Group {
-    constructor(v0, v1, color, draggable) {
+    constructor(color, update, ...points) {
         super();
-        this.v0 = new THREE.Vector3().fromArray(v0);
-        this.v1 = new THREE.Vector3().fromArray(v1);
         this.color = color;
-        this.head = new THREE.Mesh(
-            new THREE.ConeGeometry(2 * PT, 4 * PT, 16),
+        this.update = update;
+        this.vectors = points.map(p => p.vector);
+        this.nodes = points.map(p => {
+            let node = null;
+            if (p.geometry) {
+                node = new THREE.Mesh(
+                    GEOMETRY[p.geometry](),
+                    new THREE.MeshLambertMaterial({ color })
+                );
+                node.position.copy(p.vector);
+                if (p.drag) node.drag = () => {
+                    p.vector.copy(node.position);
+                    p.drag();
+                    this.refresh();
+                };
+            }
+            return node;
+        });
+        this.edge = new THREE.Mesh(
+            GEOMETRY["tube"](...this.vectors),
             new THREE.MeshLambertMaterial({ color })
         );
-        this.tail = new THREE.Mesh(
-            this.getTube(),
-            new THREE.MeshLambertMaterial({ color })
-        );
-        if (draggable) {
-            this.draggables = [this.head];
-            this.head.drag = () => {
-                this.v1.copy(this.head.position);
-                this.refresh();
-            };
-        }
-        this.add(this.head, this.tail);
+        this.add(this.edge, ...this.nodes.filter(node => node));
         this.refresh();
     }
 
-    getTube() {
-        return new THREE.TubeGeometry(
-            new THREE.LineCurve(this.v0, this.v1),
-            1, 1 * PT, 8
-        );
-    }
-
     refresh() {
-        this.tail.geometry = this.getTube();
-        this.head.position.copy(this.v1);
-        this.head.lookAt(this.v0);
-        this.head.rotateX(-Math.PI / 2);
+        if (this.update) this.update();
+        this.edge.geometry = GEOMETRY["tube"](...this.vectors);
+        this.nodes.forEach((node, i) => {
+            if (node) {
+                node.position.copy(this.vectors[i]);
+                node.lookAt(this.vectors[i > 0 ? i - 1 : 0]);
+                node.rotateX(-Math.PI / 2);
+            }
+        });
     }
 }
 
