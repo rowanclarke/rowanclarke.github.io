@@ -94,12 +94,27 @@ const GEOMETRY = {
     ),
 }
 
+export class Vector extends THREE.Vector3 {
+    constructor(x = 0, y = 0, z = 0) {
+        super(x, y, z);
+        this.updates = [];
+    }
+
+    then(...updates) {
+        this.updates.push(...updates);
+        return this;
+    }
+
+    update = () => {
+        this.updates.forEach(update => update());
+    }
+}
+
 export class Arrow extends THREE.Group {
-    constructor(color, update, ...points) {
+    constructor(color, ...points) {
         super();
         this.color = color;
-        this.update = update;
-        this.vectors = points.map(p => p.vector);
+        this.vectors = points.map(p => p.vector.then(this.update)); 
         this.nodes = points.map(p => {
             let node = null;
             if (p.geometry) {
@@ -108,10 +123,9 @@ export class Arrow extends THREE.Group {
                     new THREE.MeshLambertMaterial({ color })
                 );
                 node.position.copy(p.vector);
-                if (p.drag) node.drag = () => {
+                if (p.draggable) node.drag = () => {
                     p.vector.copy(node.position);
-                    p.drag();
-                    this.refresh();
+                    p.vector.update();
                 };
             }
             return node;
@@ -121,11 +135,10 @@ export class Arrow extends THREE.Group {
             new THREE.MeshLambertMaterial({ color })
         );
         this.add(this.edge, ...this.nodes.filter(node => node));
-        this.refresh();
+        this.update();
     }
 
-    refresh() {
-        if (this.update) this.update();
+    update = () => {
         this.edge.geometry = GEOMETRY["tube"](...this.vectors);
         this.nodes.forEach((node, i) => {
             if (node) {

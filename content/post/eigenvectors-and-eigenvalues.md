@@ -12,19 +12,22 @@ imports: ["import * as MINTER from '/js/minter.js'", "import * as THREE from 'th
     let controls = {
         lambda: 0,
     };
+    let indices = [0, 1, 2];
     let vectors = {
-        zero: new THREE.Vector3(0, 0, 0),
-        matrix: [
-            new THREE.Vector3(1, 0, 0),
-            new THREE.Vector3(0, 1, 0),
-            new THREE.Vector3(0, 0, 1),
-        ],
-        offset: [
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Vector3(0, 0, 0),
-        ]
-    }
+        zero: new MINTER.Vector(),
+        matrix: indices.map(i =>
+            new MINTER.Vector().setComponent(i, 1).then(
+                () => vectors.end[i].update()
+            )
+        ),
+        end: indices.map(i =>
+            new MINTER.Vector().then(
+                () => {
+                    vectors.end[i].set(0, 0, 0).setComponent(i, -controls.lambda).add(vectors.matrix[i]);
+                }
+            )
+        ),
+    };
     let colors = {
         weak: [
             MINTER.COLORS.red[0],
@@ -38,44 +41,31 @@ imports: ["import * as MINTER from '/js/minter.js'", "import * as THREE from 'th
         ]
     };
     let arrows = {
-        matrix: vectors.matrix.map((vector, i) =>
-            new MINTER.Arrow(colors.weak[i], null,
+        matrix: indices.map(i =>
+            new MINTER.Arrow(colors.weak[i],
                 { vector: vectors.zero },
                 {
                     vector: vectors.matrix[i],
                     geometry: "cone",
-                    drag: () => {
-                        arrows.offset[i].refresh();
-                        arrows.final[i].refresh();
-                    }
+                    draggable: true,
                 }
             )
         ),
-        offset: vectors.offset.map((vector, i) => {
-            let end = new THREE.Vector3();
-            let update = () => end.subVectors(vectors.matrix[i], vector);
-            return new MINTER.Arrow(colors.weak[i], update,
+        offset: indices.map(i =>
+            new MINTER.Arrow(colors.weak[i],
                 { vector: vectors.matrix[i] },
-                { vector: end, geometry: "cone" },
-            );
-        }),
-        final: vectors.matrix.map((vector, i) => {
-            let end = new THREE.Vector3();
-            let update = () => end.subVectors(vector, vectors.offset[i]);
-            return new MINTER.Arrow(colors.strong[i], update,
+                { vector: vectors.end[i], geometry: "cone" },
+            )
+        ),
+        final: indices.map(i => 
+            new MINTER.Arrow(colors.strong[i], 
                 { vector: vectors.zero },
-                { vector: end, geometry: "cone" },
-            );
-        })
+                { vector: vectors.end[i], geometry: "cone" },
+            )
+        )
     };
-    canvas.gui.add(controls, "lambda", -5, 5, 0.1).name("λ").onChange((lambda) => {
-        vectors.offset.forEach((vector, i) => {
-            vector.setComponent(i, lambda);
-        });
-        arrows.offset.forEach((arrow, i) => {
-            arrow.refresh();
-            arrows.final[i].refresh();
-        });
+    canvas.gui.add(controls, "lambda", -5, 5, 0.1).name("λ").onChange(() => {
+        vectors.end.forEach(end => end.update());
     });
     scene.add(...arrows.matrix, ...arrows.offset, ...arrows.final);
     canvas.run();
