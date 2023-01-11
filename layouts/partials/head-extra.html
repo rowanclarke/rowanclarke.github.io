@@ -1,11 +1,11 @@
 <script type="importmap">
     {
         "imports": {
-            "three": "https://unpkg.com/three/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three/examples/jsm/",
-            "math": "https://unpkg.com/mathjs/lib/esm/index.js"
+            "three": "https://cdn.jsdelivr.net/npm/three/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three/examples/jsm/"
         }
     }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/mathjs/lib/browser/math.js"/>
 
 <script type="module" src='{{ ( resources.Get "js/minter.js" | js.Build ( dict "format" "esm") ).Permalink }}'></script>
