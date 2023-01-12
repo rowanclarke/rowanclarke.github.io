@@ -97,7 +97,8 @@ export class Grid extends Scene {
 export class Reactive {
     constructor(data) {
         this._data = data;
-        this.data = () => typeof(this._data) == "function" ? this._data() : this._data;
+        this.func = typeof(this._data) == "function";
+        this.data = () => this.func ? this.__data : this._data;
         this.updates = [];
     }
 
@@ -107,7 +108,8 @@ export class Reactive {
     }
 
     update = () => {
-        this.updates.forEach(update => update());
+        if (this.func) this.__data = this._data();
+        if (this.data()) this.updates.forEach(update => update());
     }
 }
 
@@ -126,10 +128,14 @@ export class FunctionOf extends Reactive {
 }
 
 export class FunctionOfArray extends FunctionOf {
-    constructor(n, func, ...params) {
+    constructor(func, ...params) {
         super(func, ...params);
-        this.reactives = range(n).map(i => 
-            new FunctionOf(array => array[i], this));
+        this.reactives = [];
+        this.then(() => {
+            let data = this.data();
+            for (let i = this.reactives.length; i < data.length; i++)
+                this.reactives[i] = new FunctionOf(array => array[i], this);
+        })
     }
 }
 
@@ -204,28 +210,30 @@ export class Arrow extends THREE.Group {
 }
 
 export class Group extends THREE.Group {
-    constructor(n, ...params) { // param.reactives.length is constant
+    constructor(...params) { // param.reactives.length changes
         super();
-        this.n = n;
         this.params = params.map(param => param.then(this.update));
     }
 
     update = () => {
-        range(this.n).forEach(i => {
+        let n = Math.min(...this.params.map(param => {
+            let i = param.reactives.map(reactive => reactive.data()).indexOf(undefined);
+            return (i == -1) ? param.reactives.length : i;
+        }));
+        for (let i = 0; i < n; i++) {
             let child = this.children[i];
             if (child) child.visible = true;
             else
                 this.add(this.new(...this.params.map(param => param.reactives[i])));
-        });
-        this.children.forEach((child, i) => {
-            if (i > n - 1) child.visible = false;
-        });
+        }
+        for (let i = n; i < this.children.length; i++)
+            this.children[i].visible = false;
     }
 }
 
 export class Arrows extends Group {
-    constructor(n, as, bs, draggable) {
-        super(n, as, bs);
+    constructor(as, bs, draggable) {
+        super(as, bs);
         this.draggable = draggable;
         this.update();
     }
