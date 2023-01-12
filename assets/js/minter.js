@@ -5,6 +5,14 @@ import { GUI } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/libs/lil-gu
 
 const PT = 0.1;
 
+function range(n) {
+    return [...Array(n).keys()];
+}
+
+function copy(v, vector) {
+    range(3).forEach(i => v[i] = vector.getComponent(i));
+}
+
 export class Canvas {
     constructor(width, height) {
         this.canvas = document.createElement("div");
@@ -88,7 +96,8 @@ export class Grid extends Scene {
 
 export class Reactive {
     constructor(data) {
-        this.data = data;
+        this._data = data;
+        this.data = () => typeof(this._data) == "function" ? this._data() : this._data;
         this.updates = [];
     }
 
@@ -104,27 +113,24 @@ export class Reactive {
 
 export class ReactiveArray extends Reactive {
     constructor(...data) {
-        super(data);
+        super(() => this.reactives.map(reactive => reactive.data()));
         this.reactives = data.map(element => new Reactive(element).then(this.update));
     }
 }
 
 export class FunctionOf extends Reactive {
     constructor(func, ...params) {
-        super(func(...params.map(p => p.data)));
-        this.func = func;
-        this.params = params;
+        super(() => func(...params.map(param => param.data())));
         params.forEach(param => param.then(this.update));
-    }
-
-    update = () => {
-        this.data = this.func(...this.params.map(p => p.data));
-        this.updates.forEach(update => update());
     }
 }
 
-function copy(v, vector) {
-    [0, 1, 2].forEach(i => v[i] = vector.getComponent(i));
+export class FunctionOfArray extends FunctionOf {
+    constructor(n, func, ...params) {
+        super(func, ...params);
+        this.reactives = range(n).map(i => 
+            new FunctionOf(array => array[i], this));
+    }
 }
 
 const GEOMETRY = {
@@ -157,7 +163,7 @@ export class Mesh extends THREE.Object3D {
         this._position = position.then(this.update);
         if (draggable) {
             this.mesh.drag = () => {
-                copy(this._position.data, this.mesh.position);
+                copy(this._position.data(), this.mesh.position);
                 this._position.update();
             };
         }
@@ -165,20 +171,15 @@ export class Mesh extends THREE.Object3D {
     }
 
     getGeometry = () => {
-        return GEOMETRY[this.geometry](...this.params.map(p => p.data));
+        return GEOMETRY[this.geometry](...this.params.map(param => param.data()));
     }
-
-    /*update = () => {
-        console.log(this._position.data);
-        this.mesh.position.fromArray(this._position.data);
-    }*/
 }
 
 export class Cube extends THREE.Group {
     constructor(position, draggable) {
         super();
         this.cube = new Mesh(0xffff00, () => {
-            this.cube.mesh.position.fromArray(this.cube._position.data);
+            this.cube.mesh.position.fromArray(this.cube._position.data());
         }, "cone").withPosition(position, draggable);
         this.cube.update();
         this.add(this.cube);
@@ -192,8 +193,8 @@ export class Arrow extends THREE.Group {
             this.tube.mesh.geometry = this.tube.getGeometry();
         }, "tube", a, b);
         this.head = new Mesh(0xffff00, () => {
-            this.head.mesh.position.fromArray(this.head._position.data);
-            this.head.mesh.lookAt(new THREE.Vector3().fromArray(a.data));
+            this.head.mesh.position.fromArray(this.head._position.data());
+            this.head.mesh.lookAt(new THREE.Vector3().fromArray(a.data()));
             this.head.mesh.rotateX(-Math.PI / 2);
         }, "cone").withPosition(b, draggable);
         this.head.update();
@@ -203,38 +204,34 @@ export class Arrow extends THREE.Group {
 }
 
 export class Group extends THREE.Group {
-    constructor(objects) { // ReactiveArray
+    constructor(n, ...params) { // param.reactives.length is constant
         super();
-        this.objects = objects.then(this.update);
-        this.update();
+        this.n = n;
+        this.params = params.map(param => param.then(this.update));
     }
 
     update = () => {
-        this.objects.reactives.forEach((object, i) => {
+        range(this.n).forEach(i => {
             let child = this.children[i];
-            if (child) {
-                child.visible = true;
-            } else {
-                this.add(this.new(object));
-            }
+            if (child) child.visible = true;
+            else
+                this.add(this.new(...this.params.map(param => param.reactives[i])));
         });
         this.children.forEach((child, i) => {
-            if (i > this.objects.reactives.length - 1) {
-                child.visible = false;
-            }
+            if (i > n - 1) child.visible = false;
         });
     }
 }
 
 export class Arrows extends Group {
-    constructor(colors, vectors, draggable) {
-        super(vectors);
-        this.colors = colors;
+    constructor(n, as, bs, draggable) {
+        super(n, as, bs);
+        this.draggable = draggable;
+        this.update();
     }
 
-    new(vector) {
-        console.log(vector);
-        return new Arrow(new Reactive([0, 0, 0]), vector, true);
+    new(a, b) {
+        return new Arrow(a, b, this.draggable);
     }
 }
 
