@@ -14,27 +14,35 @@ imports: ["import * as MINTER from '/js/minter.js'", "import * as THREE from 'th
     let zero = new MINTER.ReactiveArray([0, 0, 0], [0, 0, 0], [0, 0, 0]);
     let matrix = new MINTER.ReactiveArray([1, 0, 0], [0, 1, 0], [0, 0, 1]);
     let final = new MINTER.FunctionOfArray(
-        (matrix, lambda) => math.subtract(matrix, math.multiply(lambda[0], math.identity(3)))._data,
+        (matrix, lambda) => math.subtract(
+            matrix,
+            math.multiply(lambda[0], math.identity(3))).toArray(),
         matrix, lambda);
     let eigens = new MINTER.FunctionOfArray(
-        matrix => {
-            let eigs; 
+        (matrix) => {
+            matrix = math.matrixFromColumns(...matrix);
+            let eigens;
             try {
-                eigs = math.eigs(math.matrixFromColumns(...matrix)).vectors
-                .filter(vector => vector.find(e => typeof(e) != "number") === undefined)
-                .map(vector => vector[1] < 0 ? math.multiply(-1, vector) : vector)
-                .map(vector => math.divide(vector, math.norm(vector)));
+                eigens = math.eigs(matrix);
             } catch (e) {
-                eigs = [];
+                return [];
             }
-            return eigs;
+            let vectors = math.transpose(eigens.vectors);
+            vectors = vectors
+            .filter(vector => vector.find(e => typeof(e) != "number") === undefined)
+            .map(vector => vector[1] < 0 ? math.multiply(-1, vector) : vector)
+            .map(vector => math.divide(vector, math.norm(vector)));
+            return vectors;
         },
         matrix);
+    let adjEigens = new MINTER.FunctionOfArray(
+        (eigens, final) => {
+            return (eigens && eigens.length > 0) ? math.multiply(eigens, final) : eigens;
+        },
+        eigens, final);
     let objects = [
         new MINTER.Arrows(zero, matrix, true),
-        new MINTER.Arrows(matrix, final, false),
-        new MINTER.Arrows(zero, final, false),
-        new MINTER.Arrows(zero, eigens, false),
+        new MINTER.Arrows(zero, adjEigens, false),
     ];
     canvas.gui.add({ lambda: lambda.data()[0] }, "lambda", -5, 5, 0.1).name("λ").onChange((_lambda) => {
         lambda.data()[0] = _lambda;
