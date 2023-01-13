@@ -41,8 +41,19 @@ imports: ["import * as MINTER from '/js/minter.js'", "import * as THREE from 'th
         },
         eigens, final);
     let objects = [
-        new MINTER.Arrows(zero, matrix, true),
-        new MINTER.Arrows(zero, adjEigens, false),
+        new MINTER.Arrows(zero, matrix, [
+            { color: MINTER.COLORS.red[4] },
+            { color: MINTER.COLORS.green[4] },
+            { color: MINTER.COLORS.blue[4] },
+        ], true),
+        new MINTER.Arrows(zero, eigens, [{
+            color: MINTER.COLORS.light_gray,
+            opacity: 0.5,
+            transparent: true,
+        }], false),
+        new MINTER.Arrows(zero, adjEigens, [{
+            color: MINTER.COLORS.light_gray
+        }], false),
     ];
     canvas.gui.add({ lambda: lambda.data()[0] }, "lambda", -5, 5, 0.1).name("λ").onChange((_lambda) => {
         lambda.data()[0] = _lambda;

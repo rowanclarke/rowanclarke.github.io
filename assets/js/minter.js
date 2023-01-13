@@ -151,7 +151,7 @@ const GEOMETRY = {
 }
 
 export class Mesh extends THREE.Object3D {
-    constructor(color, update, geometry, ...params) {
+    constructor(material, update, geometry, ...params) {
         super();
         this.update = update;
         this.geometry = geometry;
@@ -159,7 +159,7 @@ export class Mesh extends THREE.Object3D {
 
         this.mesh = new THREE.Mesh(
             this.getGeometry(),
-            new THREE.MeshLambertMaterial({ color })
+            new THREE.MeshLambertMaterial(material)
         );
 
         this.add(this.mesh);
@@ -182,9 +182,9 @@ export class Mesh extends THREE.Object3D {
 }
 
 export class Cube extends THREE.Group {
-    constructor(position, draggable) {
+    constructor(position, material, draggable) {
         super();
-        this.cube = new Mesh(0xffff00, () => {
+        this.cube = new Mesh(material, () => {
             this.cube.mesh.position.fromArray(this.cube._position.data());
         }, "cone").withPosition(position, draggable);
         this.cube.update();
@@ -193,12 +193,12 @@ export class Cube extends THREE.Group {
 }
 
 export class Arrow extends THREE.Group {
-    constructor(a, b, draggable) {
+    constructor(a, b, material, draggable) {
         super();
-        this.tube = new Mesh(0xffff00, () => {
+        this.tube = new Mesh(material, () => {
             this.tube.mesh.geometry = this.tube.getGeometry();
         }, "tube", a, b);
-        this.head = new Mesh(0xffff00, () => {
+        this.head = new Mesh(material, () => {
             this.head.mesh.position.fromArray(this.head._position.data());
             this.head.mesh.lookAt(new THREE.Vector3().fromArray(a.data()));
             this.head.mesh.rotateX(-Math.PI / 2);
@@ -224,7 +224,7 @@ export class Group extends THREE.Group {
             let child = this.children[i];
             if (child) child.visible = true;
             else
-                this.add(this.new(...this.params.map(param => param.reactives[i])));
+                this.add(this.new(i, ...this.params.map(param => param.reactives[i])));
         }
         for (let i = n; i < this.children.length; i++)
             this.children[i].visible = false;
@@ -232,14 +232,15 @@ export class Group extends THREE.Group {
 }
 
 export class Arrows extends Group {
-    constructor(as, bs, draggable) {
+    constructor(as, bs, materials, draggable) {
         super(as, bs);
+        this.materials = materials;
         this.draggable = draggable;
         this.update();
     }
 
-    new(a, b) {
-        return new Arrow(a, b, this.draggable);
+    new(i, a, b) {
+        return new Arrow(a, b, this.materials[i % this.materials.length], this.draggable);
     }
 }
 
