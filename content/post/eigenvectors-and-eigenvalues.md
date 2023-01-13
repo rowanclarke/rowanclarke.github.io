@@ -1,10 +1,22 @@
 ---
 title: "Eigenvectors and Eigenvalues"
-date: 2023-01-01T15:45:24Z
+date: 2023-01-13T15:45:24Z
 series: ["Single Value Decomposition"]
 series_weight: 1
 imports: ["import * as MINTER from '/js/minter.js'", "import * as THREE from 'three'"]
 ---
+
+An **eigenvector**, $v$, for matrix $A$ is a vector that when *transformed* by $A$, stays on the *same line* as the vector, or in other words, is a scalar multiple of the vector.
+This scalar is called the **eigenvalue**, $\lambda$, of $v$.
+So $Av=\lambda v$ holds for all eigenvectors $v$ with eigenvalue $\lambda$.
+
+Since $Iv=v$, we have $Av=\lambda Iv$, so $(A-\lambda I)v=0$.
+So the set of eigenvectors, called the **eigenspace**, for a given $\lambda$ is $\\{v\in F^n\mid (A-\lambda I)v=0\\}=\ker(A-\lambda I)$.
+
+Suppose that $v\neq 0$, then $Iv\neq 0$. 
+So $(A-\lambda I)Iv=0$ is true *if and only if* $\det(A-\lambda I)=0$.
+This determinant is called the **characteristic polynomial**, $c_A$, of $A$.
+Therefore, the roots of $c_A$ are the eigenvalues of $A$.
 
 {{<script>}}
     let canvas = new MINTER.Canvas(400, 400);
