@@ -1,6 +1,12 @@
 title = "Rowan Clarke"
 theme = "holy"
+assetsDir = "/assets/"
 [menu]
+[[menu.main]]
+  identifier = "series"
+  name = "Series"
+  url = "/series/"
+  weight = 8
 [[menu.main]]
   identifier = "about"
   name = "About"

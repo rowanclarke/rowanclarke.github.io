@@ -1,0 +1,14 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three/examples/jsm/",
+            "katex": "https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.mjs"
+        }
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjs/lib/browser/math.js"/>
+
+<script type="module" src='{{ ( resources.Get "js/minter.js" | js.Build ( dict "format" "esm" ) ).Permalink }}'></script>
+<script type="module" src='{{ ( resources.Get "js/katex.js" | js.Build ( dict "format" "esm" ) ).Permalink }}'></script>

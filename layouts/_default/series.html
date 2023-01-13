@@ -1,0 +1,17 @@
+{{ define "main" }}
+<article class="box:border-box pt:32">
+    <header class="mb:32">
+        <div class="font:45 font:extrabold">{{ .Title }}</div>
+    </header>
+</article>
+<div class="transform:scale(0.9)">
+    {{ range .Pages }}
+    <article class="box:border-box pt:16">
+        <header class="mb:32">
+            <div class="font:40 font:bold">{{ .Title }}</div>
+        </header>
+        {{- partial "prose.html" . -}}
+    </article>
+    {{ end }}
+</div>
+{{ end }}
