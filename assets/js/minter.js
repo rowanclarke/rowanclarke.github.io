@@ -29,12 +29,22 @@ export class Canvas {
         this.width = width;
         this.height = height;
         this.scene = null;
+        this.animations = [];
+        this.time = Date.now();
         this.run = () => {
             if (this.scene) {
                 requestAnimationFrame(this.run);
+                let now = Date.now();
+                let delta = (now - this.time) / 1000;
+                this.time = now;
+                this.animations.forEach(animation => animation.next(delta));
                 this.renderer.render(this.scene, this.scene.update());
             }
         }
+    }
+
+    animate(...animations) {
+        this.animations.push(...animations);    
     }
 }
 
@@ -98,7 +108,7 @@ export class Reactive {
     constructor(data) {
         this._data = data;
         this.func = typeof(this._data) == "function";
-        this.data = () => this.func ? this.__data : this._data;
+        this.data = () => this.func ? this.__data: this._data;
         this.updates = [];
     }
 
@@ -109,7 +119,14 @@ export class Reactive {
 
     update = () => {
         if (this.func) this.__data = this._data();
-        if (this.data()) this.updates.forEach(update => update());
+        if (this.data()) {
+            let i = 0;
+            let update;
+            while (update = this.updates[i]) {
+                update();
+                i++;
+            }
+        }
     }
 }
 
@@ -135,7 +152,7 @@ export class FunctionOfArray extends FunctionOf {
             let data = this.data();
             for (let i = this.reactives.length; i < data.length; i++)
                 this.reactives[i] = new FunctionOf(array => array[i], this);
-        })
+        });
     }
 }
 
@@ -241,6 +258,32 @@ export class Arrows extends Group {
 
     new(i, a, b) {
         return new Arrow(a, b, this.materials[i % this.materials.length], this.draggable);
+    }
+}
+
+export let lerpArray = (before, after, t) => 
+    range(before.length).map(i => before[i] * (1 - t) + after[i] * t);
+
+export class Animation {
+    constructor(before, after, transition, time) {
+        this.t = new Reactive([0]);
+        this.before = before;
+        this.after = after;
+        this.time = time;
+        this.running = true;
+
+        this.current = new FunctionOf(transition, before, after, this.t);
+    }
+
+    next(delta) {
+        if (this.running) {
+            this.t.data()[0] += delta / this.time;
+            if (this.t.data()[0] > 1) {
+                this.t.data()[0] = 1;
+                this.running = false;
+            }
+            this.t.update();
+        }
     }
 }
 

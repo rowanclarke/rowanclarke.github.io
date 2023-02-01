@@ -13,15 +13,14 @@ So $Av=\lambda v$ holds for all eigenvectors $v$ with eigenvalue $\lambda$.
 Since $Iv=v$, we have $Av=\lambda Iv$, so $(A-\lambda I)v=0$.
 So the set of eigenvectors, called the **eigenspace**, for a given $\lambda$ is $\\{v\in F^n\mid (A-\lambda I)v=0\\}=\ker(A-\lambda I)$.
 
-Suppose that $v\neq 0$, then $Iv\neq 0$. 
-So $(A-\lambda I)Iv=0$ is true *if and only if* $\det(A-\lambda I)=0$.
+Suppose that $v\in\ker(A-\lambda I)\neq \\{0\\}$.
+Then $(A-\lambda I)v=0$ holds *if and only if* $\det(A-\lambda I)=0$, since $\text{im}(A-\lambda I)\neq F^n$.
 This determinant is called the **characteristic polynomial**, $c_A$, of $A$.
 Therefore, the roots of $c_A$ are the eigenvalues of $A$.
 
 {{<script>}}
     let canvas = new MINTER.Canvas(400, 400);
     let scene = new MINTER.Grid(canvas);
-    //
     let lambda = new MINTER.Reactive([0]);
     let zero = new MINTER.ReactiveArray([0, 0, 0], [0, 0, 0], [0, 0, 0]);
     let matrix = new MINTER.ReactiveArray([1, 0, 0], [0, 1, 0], [0, 0, 1]);
