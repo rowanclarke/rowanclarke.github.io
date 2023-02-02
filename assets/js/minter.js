@@ -264,23 +264,21 @@ export class Arrows extends Group {
 export let lerpArray = (before, after, t) => 
     range(before.length).map(i => before[i] * (1 - t) + after[i] * t);
 
-export class Animation {
-    constructor(before, after, transition, time) {
-        this.t = new Reactive([0]);
-        this.before = before;
-        this.after = after;
+export class Animation extends FunctionOf {
+    constructor(before, after, transition, time, loop=false) {
+        super(transition, before, after, t = new Reactive([0]));
+        this.t = t;
         this.time = time;
+        this.loop = loop;
         this.running = true;
-
-        this.current = new FunctionOf(transition, before, after, this.t);
     }
 
     next(delta) {
         if (this.running) {
             this.t.data()[0] += delta / this.time;
             if (this.t.data()[0] > 1) {
-                this.t.data()[0] = 1;
-                this.running = false;
+                this.t.data()[0] = (this.loop) ? 0 : 1
+                this.running = this.loop;
             }
             this.t.update();
         }

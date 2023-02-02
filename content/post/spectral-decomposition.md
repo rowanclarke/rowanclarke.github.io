@@ -19,10 +19,15 @@ imports: ["import * as MINTER from '/js/minter.js'", "import * as THREE from 'th
         (matrix, a) => math.multiply(matrix, a),
         matrix, a);
     final.update();
-    let animation = new MINTER.Animation(matrix.reactives[0], final.reactives[0], MINTER.lerpArray, 1);
-    animation.current.update();
+    let animation = new MINTER.Animation(matrix.reactives[0], final.reactives[0], MINTER.lerpArray, 1, true);
+    animation.update();
     scene.add(
-        new MINTER.Arrow(zero.reactives[0], animation.current,
+        new MINTER.Arrows(zero, matrix, [
+            { color: MINTER.COLORS.red[4] },
+            { color: MINTER.COLORS.green[4] },
+            { color: MINTER.COLORS.blue[4] },
+         ], true),
+        new MINTER.Arrow(zero.reactives[0], animation,
             { color: MINTER.COLORS.red[4] }
         , false),
     );
