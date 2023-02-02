@@ -261,16 +261,19 @@ export class Arrows extends Group {
     }
 }
 
-export let lerpArray = (before, after, t) => 
+export let array = (before, after, t) => 
     range(before.length).map(i => before[i] * (1 - t) + after[i] * t);
 
-export let lerpMatrix = (before, after, t) => 
-    math.add(math.multiply(1 - t[0], before), math.multiply(t[0], after));
+export let matrix = (before, after, t) => 
+    math.add(math.multiply(1 - t, before), math.multiply(t, after));
 
+export let linear = t => t[0];
+export let cos = t => (1 - math.cos(t[0] * math.PI)) / 2;
 
 export class Animation extends FunctionOf {
-    constructor(before, after, transition, time, loop=false) {
-        super(transition, before, after, t = new Reactive([0]));
+    constructor(time, before, after, transition, interpolation=linear, loop=false) {
+        super(transition, before, after, i = new FunctionOf(interpolation, t = new Reactive([0])));
+        i.update();
         this.t = t;
         this.time = time;
         this.loop = loop;
@@ -290,8 +293,8 @@ export class Animation extends FunctionOf {
 }
 
 export class AnimationArray extends Animation {
-    constructor(before, after, transition, time, loop=false) {
-        super(before, after, transition, time, loop);
+    constructor(time, before, after, transition, interpolation=linear, loop=false) {
+        super(time, before, after, transition, interpolation, loop);
         this.reactives = [];
         this.then(() => {
             let data = this.data();
