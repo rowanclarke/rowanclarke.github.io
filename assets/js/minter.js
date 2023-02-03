@@ -268,12 +268,18 @@ export let matrix = (before, after, t) =>
     math.add(math.multiply(1 - t, before), math.multiply(t, after));
 
 export let linear = t => t[0];
-export let cos = t => (1 - math.cos(t[0] * math.PI)) / 2;
+export let ease = t => (1 - math.cos(t[0] * math.PI)) / 2;
 
 export class Animation extends FunctionOf {
-    constructor(time, before, after, transition, interpolation=linear, loop=false) {
-        super(transition, before, after, i = new FunctionOf(interpolation, t = new Reactive([0])));
-        i.update();
+    constructor(loop=false, interpolation=linear, ...animaitons) {
+        let t = new Reactive([0]);
+        let time = animaitons.reduce((acc, animaiton) => acc + (animaiton.time ?? 0), 0);
+        let intervals = animaitons.map((acc => animaiton => acc += (animaiton.time ?? 0) / time)(0));
+        let states = animaitons.map(animaiton => animaiton.state);
+        super((t, ...states) => {
+            let i = intervals.findIndex(interval => t[0] <= interval);
+            return animaitons[i].transition(states[i], states[i+1], interpolation(t));
+        }, t, ...states);
         this.t = t;
         this.time = time;
         this.loop = loop;
@@ -293,8 +299,8 @@ export class Animation extends FunctionOf {
 }
 
 export class AnimationArray extends Animation {
-    constructor(time, before, after, transition, interpolation=linear, loop=false) {
-        super(time, before, after, transition, interpolation, loop);
+    constructor(loop=false, interpolation=linear, ...animaitons) {
+        super(loop, interpolation, ...animaitons);
         this.reactives = [];
         this.then(() => {
             let data = this.data();

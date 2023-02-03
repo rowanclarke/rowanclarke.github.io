@@ -19,7 +19,11 @@ imports: ["import * as MINTER from '/js/minter.js'", "import * as THREE from 'th
         (matrix, a) => math.multiply(matrix, a),
         matrix, a);
     final.update();
-    let animation = new MINTER.AnimationArray(1, matrix, final, MINTER.matrix, MINTER.linear, true);
+    let animation = new MINTER.AnimationArray(true, MINTER.ease,
+        { state: matrix, transition: MINTER.matrix, time: 1 },
+        { state: final, transition: MINTER.matrix, time: 1 },
+        { state: matrix }
+    );
     animation.update();
     scene.add(
         new MINTER.Arrows(zero, matrix, [
