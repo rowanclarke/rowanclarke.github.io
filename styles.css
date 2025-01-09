@@ -141,7 +141,7 @@ a {
   padding: 2px;
 }
 
-#navbar a:hover {
+#navbar a:hover, #navbar .selected {
   background-color: #7593af;
   color: #fff;
 }
