@@ -134,16 +134,26 @@ code {
 }
 
 a {
-  border-radius: 4px;
-  transition: background-color 0.3s ease, color 0.3s ease;
   text-decoration: none;
   color: #fff;
   padding: 2px;
 }
 
+a, #prev-example, #next-example {  
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.text a {
+  color: #476f95;
+}
+
+.text a:hover {
+  text-decoration: underline;
+}
+
 #navbar a:hover, #navbar .selected {
   background-color: #7593af;
-  color: #fff;
 }
 
 .icon {
