@@ -19,6 +19,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+      - name: Generate Sitemap
+        uses: cicirello/generate-sitemap@v1
+        with:
+          base-url-path: ${{ steps.deployment.outputs.page_url }}
+          drop-html-extension: true
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload Artifact
